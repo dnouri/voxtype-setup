@@ -1,0 +1,5 @@
+# From the GitHub v1.0.1 release asset API, observed 2026-10-22.
+# https://api.github.com/repos/peteonrails/voxtype/releases/assets/538639602
+# GitHub's published asset digest, not an independent publisher signature.
+# Upstream SHA256SUMS.txt does not include the DEB. Run from the repo root.
+2308e762f9fd2986a2052c931388b13e7e1c74f067b6be25cacbe710546c4a0e  tmp/packages/voxtype_1.0.1-1_amd64.deb

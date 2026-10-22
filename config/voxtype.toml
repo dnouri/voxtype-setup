@@ -1,0 +1,65 @@
+# Voxtype 1.0.1 preset for KDE Plasma 6 on Wayland.
+# CPU/GPU selection is managed by the packaged Voxtype installation.
+engine = "whisper"
+state_file = "auto"
+
+[hotkey]
+# KDE owns Super+Space; do not also enable an evdev hotkey.
+enabled = false
+mode = "toggle"
+
+[audio]
+# Follow the system-default microphone at each recording start.
+device = "default"
+sample_rate = 16000
+# Manual-stop preset: 1.0.1 has no unlimited sentinel (zero stops immediately).
+# This finite u32 ceiling is ~136 years; stop explicitly to avoid growing RAM.
+# Audio buffers use ~230 MB/hour before processing overhead.
+max_duration_secs = 4294967295
+
+[whisper]
+# English baseline. Adjust model/language for another use case.
+model = "base.en"
+language = "en"
+translate = false
+on_demand_loading = false
+eager_processing = false
+
+[output]
+# Direct typing, with no paste key. Unavailable typing drivers are skipped.
+mode = "type"
+driver_order = ["eitype", "dotool", "ydotool"]
+# Typing failure must not fall back to overwriting something the user copied.
+fallback_to_clipboard = false
+type_delay_ms = 0
+auto_submit = false
+wait_for_modifier_release = true
+
+[output.post_process]
+# Best-effort Klipper history: save plain text, publish dictation, guard restore.
+# Non-atomic; rich/unreadable/absent clipboard offers are skipped, not flattened.
+# The helper passes the original transcript through even when history is skipped.
+command = 'exec /usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/voxtype-setup/clipboard_history.py"'
+timeout_ms = 5000
+trim = false
+fallback_on_empty = true
+
+[output.notification]
+on_recording_start = true
+on_recording_stop = true
+on_transcription = true
+urgency = "normal"
+
+[osd]
+enabled = true
+frontend = "gtk4"
+position = "bottom-center"
+top_margin = 0.85
+width_px = 400
+height_px = 48
+
+[vad]
+enabled = false
+
+[text]
+smart_auto_submit = false

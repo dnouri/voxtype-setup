@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voxtype on KDE: direct typing with Klipper recovery</title>
+<style>
+  :root { --bg:#f7f7f5; --panel:#fff; --ink:#1c2024; --ink-soft:#4d5560; --faint:#8a919b; --line:#dde1e6;
+    --accent:#0b6bcb; --accent-soft:#e7f1fb; --good:#177245; --good-soft:#e6f4ec; --warn:#8a5a00; --warn-soft:#fdf3e0;
+    --mono: ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#101418; --panel:#171c22; --ink:#e4e8ec; --ink-soft:#aeb6bf;
+    --faint:#7d8590; --line:#2b333d; --accent:#5ea6ef; --accent-soft:#16283c; --good:#4ec98a; --good-soft:#12291e;
+    --warn:#e0a83e; --warn-soft:#2e2410; } }
+  * { box-sizing:border-box; }
+  body { margin:0 auto; max-width:860px; padding:2.5rem 1.25rem 4rem; background:var(--bg); color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; }
+  header.masthead { border-bottom:2px solid var(--line); padding-bottom:1.2rem; margin-bottom:2rem; }
+  h1 { font-size:1.68rem; line-height:1.25; margin:0 0 .5rem; letter-spacing:-0.01em; }
+  h2 { font-size:1.26rem; margin:2.6rem 0 .8rem; padding-top:1.4rem; border-top:1px solid var(--line); }
+  h2:first-of-type { border-top:none; padding-top:0; }
+  h3 { font-size:1.04rem; margin:1.6rem 0 .5rem; }
+  p { margin:.65rem 0; } .subtitle { color:var(--ink-soft); margin:0 0 .9rem; } .meta { color:var(--faint); font-size:.85rem; }
+  .badges { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.9rem; }
+  .badge { font-size:.76rem; font-weight:600; letter-spacing:.02em; border:1px solid var(--line); border-radius:999px;
+    padding:.18rem .65rem; color:var(--ink-soft); background:var(--panel); }
+  .badge.scope { border-color:var(--good); color:var(--good); background:var(--good-soft); }
+  code, kbd { font-family:var(--mono); font-size:.86em; background:var(--accent-soft); border-radius:4px; padding:.08em .34em; }
+  kbd { border:1px solid var(--line); border-bottom-width:2px; background:var(--panel); }
+  pre { font-family:var(--mono); font-size:.83rem; line-height:1.5; background:var(--panel);
+    border:1px solid var(--line); border-radius:8px; padding:.9rem 1rem; overflow-x:auto; }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:1rem 0 .4rem; font-size:.88rem; background:var(--panel); }
+  th, td { border:1px solid var(--line); padding:.4rem .6rem; text-align:left; vertical-align:top; }
+  th { background:var(--accent-soft); font-weight:600; } td.num, th.num { text-align:right; }
+  .callout { border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--panel);
+    border-radius:6px; padding:.8rem 1rem; margin:1rem 0; }
+  .callout.warn { border-left-color:var(--warn); background:var(--warn-soft); }
+  .callout.good { border-left-color:var(--good); background:var(--good-soft); }
+  .callout p { margin:.35rem 0; } .callout .ttl { font-weight:700; font-size:.92rem; }
+  ul, ol { padding-left:1.4rem; } li { margin:.35rem 0; } .tight li { margin:.18rem 0; }
+  figure { margin:1.4rem 0; }
+  figure img { width:100%; height:auto; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+  figcaption { font-size:.82rem; color:var(--ink-soft); margin-top:.5rem; }
+  .foot { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--line); color:var(--faint); font-size:.82rem; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .path { font-family:var(--mono); font-size:.8rem; word-break:break-all; }
+  .toc { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.8rem 1.1rem; font-size:.92rem; }
+  .toc ol { margin:.3rem 0; }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <h1><a href="https://github.com/peteonrails/voxtype">Voxtype</a> on KDE: direct typing with Klipper recovery</h1>
+  <p class="subtitle">A small setup kit for packaged Voxtype 1.0.1 on KDE Plasma 6 (Wayland) with PipeWire. Press, talk, press again: the complete utterance is typed at the cursor. A default helper briefly publishes it to Klipper, then guardedly restores your previous supported plain-text clipboard.</p>
+  <p class="meta">Tested baseline: Debian 13 (trixie), amd64 x86-64-v3 &middot; KDE Plasma 6 / Wayland / PipeWire &middot; Voxtype 1.0.1 upstream .deb. Ubuntu/Kubuntu with compatible packages is untested.</p>
+  <div class="badges">
+    <span class="badge scope">Setup kit — not a fork or new daemon</span> <span class="badge">Final-on-stop, not streaming</span>
+    <span class="badge">Default recovery is non-atomic</span> <span class="badge">Installer is dry-run by default</span>
+  </div>
+</header>
+<nav class="toc">
+  <strong>In this guide</strong>
+  <ol>
+    <li><a href="#kit">What this kit is, and is not</a></li>
+    <li><a href="#flow">What Super+Space actually does</a></li>
+    <li><a href="#preset">The preset, setting by setting</a></li>
+    <li><a href="#ceiling">The recording ceiling, honestly</a></li>
+    <li><a href="#clipboard">Default clipboard recovery: operation, limits and opt-out</a></li>
+    <li><a href="#micosd">Microphone, on-screen display, notifications</a></li>
+    <li><a href="#install">Fresh installation</a></li>
+    <li><a href="#verify">Verify it yourself</a> &middot; <a href="#sources">Sources</a></li>
+  </ol>
+</nav>
+<h2 id="kit">1. What this kit is, and is not</h2>
+<p>This <a href="https://github.com/dnouri/voxtype-setup">repository</a> is a <strong>configuration recipe, small helper and operator runbook</strong> for packaged Voxtype 1.0.1. The installer manages three whole files: a preset, a visible KDE desktop entry, and a Python clipboard-history helper. It is <em>not</em> a Voxtype fork, replacement daemon or package manager. It never installs packages, downloads models, edits service units, switches the Voxtype binary or edits KDE's shortcut database by hand. Those remain deliberate operator actions (§7).</p>
+<pre><code>config/voxtype.toml             preset, including the default history hook
+config/packages.sha256          pinned GitHub asset digest for the upstream .deb
+desktop/voxtype-record-toggle.desktop   visible KDE shortcut entry (Meta+Space default)
+scripts/clipboard_history.py    complete-dictation save/copy/restore hook
+scripts/{install.py,doctor.py,record-sample.sh}   installer / checker / manual recorder
+Makefile                        plan / install / doctor / test / check
+docs/guide.html                 this guide; embeds docs/dictation-flow.svg</code></pre>
+<p>The design is final-on-stop transcription, <strong>direct typing plus best-effort Klipper recovery</strong>, and an explicit account of what can fail. There are no application-specific profiles, streaming fragments, separate transcript archives or Klipper database edits. The helper uses system <a href="https://docs.python.org/3/">Python</a>'s standard library and existing packaged commands; it needs no new Python package or service.</p>
+<div class="callout warn">
+  <p class="ttl">Enabled by default: a temporary, non-atomic clipboard replacement</p>
+  <p>The helper saves supported plain text A, publishes the complete dictation T, waits for Klipper capture, and guardedly restores A. Normally ordinary Paste returns A and <kbd>Super</kbd>+<kbd>V</kbd> offers T behind it. <strong>This is not atomic preservation or a history-only API:</strong> concurrent copies, failed restoration, unsupported offers and Klipper policy can prevent that outcome. Klipper may persist the dictation to disk. Read §5 before enabling the kit; remove <code>[output.post_process]</code> to opt out.</p>
+</div>
+<h2 id="flow">2. What Super+Space actually does</h2>
+<figure>
+  <img src="dictation-flow.svg" alt="Default flow: KDE Super+Space toggles recording from the default microphone; the second press transcribes the whole utterance with Whisper. The helper saves plain-text clipboard A, copies complete dictation T, waits for exact Klipper capture, then guardedly restores A. Direct typing follows. Normally Paste returns A and Super+V recovers T; unsupported snapshots and failures skip recovery, and concurrent-copy races remain.">
+  <figcaption>The daily loop. KDE owns the shortcut; the packaged Voxtype daemon records and transcribes. The default post-processing helper performs the temporary clipboard round trip before the typing driver runs. It never presses a paste key or selects existing text.</figcaption>
+</figure>
+<p>The chain, link by link:</p>
+<ol>
+  <li><strong><a href="https://develop.kde.org/docs/plasma/">KDE Plasma</a> catches the key.</strong> The visible <em>Voxtype Record Toggle</em> application (Utility category) declares <code>X-KDE-Shortcuts=Meta+Space</code> for its launch action. Desktop-cache discovery is not a binding guarantee: confirm it in §7.4. Voxtype's kernel-level hotkey is disabled (<code>[hotkey] enabled = false</code>); KDE needs no <code>input</code>-group access for the shortcut itself.</li>
+  <li><strong>The entry runs <code>voxtype record toggle</code>.</strong> The packaged one-shot CLI signals the running daemon (SIGUSR1 to start, SIGUSR2 to stop) and exits. The daemon reads its configuration at startup; this kit uses no per-recording profiles.</li>
+  <li><strong><a href="https://docs.pipewire.org/">PipeWire</a> / <a href="https://www.alsa-project.org/wiki/Main_Page">ALSA</a> supply the current default microphone.</strong> Voxtype records 16 kHz mono into RAM, with a waveform via <a href="https://github.com/wmww/gtk4-layer-shell">GTK4 layer-shell</a> and desktop notifications. Nothing is typed before stop. The duration and memory limits are in §4.</li>
+  <li><strong>The second press stops capture.</strong> Local <a href="https://github.com/ggml-org/whisper.cpp">Whisper</a> transcribes the <em>whole</em> utterance once. The English <code>base.en</code> baseline is already loaded (<code>on_demand_loading = false</code>); choose your own model, language and CPU/GPU backend.</li>
+  <li><strong>The default history hook runs.</strong> The helper uses <a href="https://github.com/bugaevc/wl-clipboard">wl-clipboard</a> to save supported plain text, publish the finished dictation and guardedly restore the saved text. <a href="https://doc.qt.io/qt-6/qdbus.html">qdbus6</a> observes exact capture in <a href="https://userbase.kde.org/Klipper">Klipper</a>. It handles only this dictation, not earlier context, and always passes its original input through (§5).</li>
+  <li><strong>The text is typed at the focused cursor.</strong> The first available typing driver wins: <code>eitype</code>, <code>dotool</code>, then <a href="https://github.com/ReimuNotMoe/ydotool">ydotool</a> (driver details: §7.1). The latter two use <a href="https://docs.kernel.org/input/uinput.html">uinput</a>. No paste key, select-all or extra submission key is sent; recognised line breaks can still generate Enter events. Typing failures do not trigger a second clipboard-output fallback, but the preceding history hook has its own documented failure risks.</li>
+</ol>
+<h2 id="preset">3. The preset, setting by setting</h2>
+<p><span class="path">config/voxtype.toml</span> is commented inline; this table is the guided tour. Model, language and compute backend are your choices — the baseline below is a starting point, not a mandate.</p>
+<table>
+  <thead><tr><th>Setting</th><th>Value</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>engine</code> / <code>[whisper] model</code> / <code>language</code></td><td>whisper / <code>base.en</code> / <code>en</code></td><td>A small, fast English baseline. Edit for another model or language; nothing else in the kit depends on it.</td></tr>
+    <tr><td><code>[whisper] on_demand_loading</code> / <code>eager_processing</code></td><td><code>false</code> / <code>false</code></td><td>Model loads once at daemon start, not per dictation — the biggest stop-to-text win. Nothing is emitted until stop regardless, so eager processing stays off.</td></tr>
+    <tr><td><code>[hotkey] enabled</code> / <code>mode</code></td><td><code>false</code> / <code>toggle</code></td><td>KDE owns Super+Space; the evdev listener stays off. The modifier-release guard is separate.</td></tr>
+    <tr><td><code>[audio] device</code></td><td><code>"default"</code></td><td>Follows the system default on each recording; a newly connected headset is used once KDE/PipeWire makes it default (§6).</td></tr>
+    <tr><td><code>[audio] max_duration_secs</code></td><td><code>4294967295</code></td><td>The largest finite value — see §4 for the full, honest story.</td></tr>
+    <tr><td><code>[output] mode</code></td><td><code>"type"</code></td><td>Keystrokes at the cursor, not a paste operation. The separate default history hook temporarily writes CLIPBOARD first (§5).</td></tr>
+    <tr><td><code>[output] driver_order</code></td><td><code>["eitype", "dotool", "ydotool"]</code></td><td>Typing-only: unavailable drivers are skipped. wtype is omitted because KWin Wayland does not implement its virtual-keyboard protocol (§7.1).</td></tr>
+    <tr><td><code>[output] fallback_to_clipboard</code></td><td><code>false</code></td><td>A typing failure remains an error, not an additional clipboard-output attempt. This does not disable the history hook.</td></tr>
+    <tr><td><code>[output.post_process]</code></td><td>known helper; <code>5000</code> ms; <code>trim = false</code>; <code>fallback_on_empty = true</code></td><td>Best-effort whole-dictation Klipper capture and guarded plain-text restoration. Original text remains available to typing on skips or failures (§5).</td></tr>
+    <tr><td><code>[output] type_delay_ms</code></td><td><code>0</code></td><td>No artificial per-character delay. Raise it (e.g. 5–10) only if characters are dropped in practice.</td></tr>
+    <tr><td><code>[output] auto_submit</code>, <code>[text] smart_auto_submit</code></td><td><code>false</code></td><td>No extra Enter is appended to submit the result. Line breaks already present in recognised text can still generate Enter events.</td></tr>
+    <tr><td><code>[output] wait_for_modifier_release</code></td><td><code>true</code></td><td>Waits briefly for modifier keys such as Super to be released before typing, so the first characters are not swallowed.</td></tr>
+    <tr><td><code>[osd]</code></td><td>gtk4, 400×48, 85% down</td><td>A small waveform strip near the bottom of the screen while recording (§6).</td></tr>
+    <tr><td><code>[output.notification]</code></td><td>all <code>true</code></td><td>Start/stop/transcription notifications are sent; your session's focus settings may still suppress popups (§6).</td></tr>
+    <tr><td><code>[vad] enabled</code></td><td><code>false</code></td><td>No voice-activity filtering — and VAD never ended a recording anyway; only the ceiling does (§4).</td></tr>
+  </tbody>
+</table>
+<h2 id="ceiling">4. The recording ceiling, honestly</h2>
+<p>Voxtype 1.0.1 stops every recording at <code>max_duration_secs</code> — a hard wall-clock safety timer, not silence detection; pauses do not reset it. There is no unlimited mode in this release, so this kit sets the largest finite value the configuration accepts:</p>
+<table>
+  <thead><tr><th>Value</th><th>What Voxtype 1.0.1 does with it</th></tr></thead>
+  <tbody>
+    <tr><td class="num"><code>0</code></td><td><strong>Stops almost immediately</strong> (the daemon checks the timer on a fast poll). Zero is <em>not</em> an "unlimited" sentinel — it makes things worse, not better.</td></tr>
+    <tr><td class="num"><code>60</code></td><td>The upstream default: dictations longer than a minute are cut off and transcribed early.</td></tr>
+    <tr><td class="num"><code>3600</code></td><td>The largest value <code>voxtype config set</code> accepts; the TOML file itself accepts more.</td></tr>
+    <tr><td class="num"><code>4294967295</code></td><td>The largest u32, accepted by direct TOML edit — ≈136 years: effectively "I stop it myself", while staying a real, finite bound the code handles cleanly. This is the preset's value. (Sources: §9.)</td></tr>
+  </tbody>
+</table>
+<p>Three consequences, stated plainly:</p>
+<ul>
+  <li><strong>RAM is the real limit.</strong> A recording is one growing in-memory buffer: 16 kHz mono float32 is 64,000 bytes/second, i.e. 3.84 MB/minute or <strong>≈230 MB per hour</strong>, before allocator slack and the copies made at stop/transcription time. A forgotten days-long recording will exhaust memory long before 136 years elapse. The huge ceiling removes a nuisance, not a law of physics.</li>
+  <li><strong>Manual stop is a privacy contract.</strong> With no practical automatic cutoff, the microphone stays open until <em>you</em> press Super+Space again. After stopping, check that the waveform disappears or run <code>voxtype status</code>; do not rely on notification popups your session may have suppressed.</li>
+  <li><strong>No silence-based rescue either.</strong> Voxtype's VAD option (off here) only rejects silence-only recordings after the fact; it never ended a recording mid-pause. If you want a shorter safety net, pick an explicit finite value such as <code>3600</code> and edit the TOML directly.</li>
+</ul>
+<h2 id="clipboard">5. Default clipboard recovery: operation, limits and opt-out</h2>
+<h3 id="clipboard-roundtrip">5.1 The normal path: save A, publish T, restore A</h3>
+<p><strong>The save/copy/restore helper is installed and enabled by default.</strong> Let A be your current supported plain-text CLIPBOARD and T the complete finished dictation. With ordinary Klipper history settings and enough capacity, the intended result is CLIPBOARD = A and history <code>[A, T]</code>: ordinary Paste still inserts A, and <kbd>Super</kbd>+<kbd>V</kbd> can recover T. Delivery remains <code>mode = "type"</code>, not paste; no clipboard driver or clipboard failure fallback is added.</p>
+<ol>
+  <li><strong>Preflight, lock and snapshot.</strong> Require the packaged commands, explicit local Wayland/session-bus endpoints, a private user-owned runtime directory, readable Klipper history and a nonblocking private lock. A busy lock skips rather than queues another dictation. Read actual clipboard offers with <code>wl-paste --list-types</code> and bytes with <code>wl-paste --no-newline</code>; never use history-top text as the backup. Recheck the offers and bytes before writing.</li>
+  <li><strong>Publish all of T, then await exact capture.</strong> Send the whole dictation through <code>wl-copy</code>'s stdin. Poll <code>qdbus6 org.kde.klipper /klipper getClipboardHistoryItem 0</code> for the exact UTF-8 text plus qdbus6's single framing LF; do not strip the item's own newlines or use a guessed capture delay. An already-retained duplicate is acceptable.</li>
+  <li><strong>Guardedly restore and verify.</strong> After any attempted publication, including a failed or timed-out command, cleanup checks the real clipboard. Restore A only while it still matches our T; a detected newer copy C wins. Check restored bytes, wait for the final clipboard text to become history head, and confirm T is still retained using bounded history probes. A failed restoration or retention check is not reported as confirmed recovery.</li>
+  <li><strong>Continue normal typing.</strong> The helper writes its original stdin bytes unchanged to stdout, even on a skip or failure. Nonzero status makes Voxtype fall back to its original transcript. That is <em>text-processing</em> fallback, not clipboard-output fallback; history trouble must not take direct typing away.</li>
+</ol>
+<h3>5.2 The hook and its deliberately small boundary</h3>
+<p>The installer puts <span class="path">scripts/clipboard_history.py</span> at <span class="path">${XDG_DATA_HOME:-$HOME/.local/share}/voxtype-setup/clipboard_history.py</span>, mode <code>0600</code>, before installing the configuration. Python reads it; it is not executable. The preset uses this exact upstream post-processing interface:</p>
+<pre><code>[output.post_process]
+command = 'exec /usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/voxtype-setup/clipboard_history.py"'
+timeout_ms = 5000
+trim = false
+fallback_on_empty = true</code></pre>
+<p>The helper uses only the Python standard library, <code>wl-copy</code>, <code>wl-paste</code> and <code>qdbus6</code>. No Python D-Bus binding, native client, extra service or database access is introduced. The ordinary background <code>wl-copy</code> provider serves the selection; it is not another managed daemon. A small empty lock file may remain under <code>XDG_RUNTIME_DIR</code>.</p>
+<p><strong>T matches this preset's dispatched text, not an arbitrary custom pipeline.</strong> Voxtype 1.0.1 still removes trailing LF characters with <code>trim = false</code>, then normalizes eight curly quote/prime characters to ASCII before output. The helper mirrors those steps for the history copy while leaving its stdout byte-exact; interior line breaks, spaces and other Unicode remain. Custom formatters or <code>append_text</code> choices are outside this baseline. The helper ignores prior dictation context and puts no transcript in command arguments, files, logs or diagnostics; its failure message is content-free.</p>
+<h3>5.3 Supported snapshots — and explicit skips</h3>
+<p>Only readable UTF-8, genuinely plain-text offers are supported: <code>text/plain</code>, <code>text/plain;charset=utf-8</code> and conventional <code>UTF8_STRING</code>/<code>TEXT</code>/<code>STRING</code> aliases. The old text's bytes, including trailing newlines, are restored, but the original set of alias formats may change. <strong>This is not a promise to preserve every MIME representation or application-specific meaning.</strong></p>
+<ul>
+  <li><strong>Rich or unknown offers are skipped before writing:</strong> HTML, images, URI lists, cut/copy metadata and other unsupported formats are not silently flattened to text.</li>
+  <li><strong>No offer is not empty text.</strong> Absent/nil or unreadable selections are skipped. A valid supported text offer containing zero bytes is distinct and can be restored.</li>
+  <li><strong>Size and session failures skip before publication.</strong> Text/snapshots over 1,048,575 bytes, invalid UTF-8, missing commands, unavailable session/history access or an unsafe/busy lock do not authorize a clipboard replacement. Oversized dictations still pass through to typing.</li>
+</ul>
+<h3>5.4 Races, timing, history policy and privacy</h3>
+<div class="callout warn">
+  <p class="ttl">Best effort is not compare-and-swap</p>
+  <p>A user copy can occur between the last check and a restore. The helper prefers a <em>detected</em> newer C, but cannot eliminate that gap or promise that ordinary Paste always returns A. During the temporary replacement, another application can read T; failed cleanup, a crash or SIGKILL can leave T current. Choose the no-hook opt-out below if that trade-off is unacceptable.</p>
+</div>
+<ul>
+  <li><strong>Bounded work, not hard real-time.</strong> Commands have approximately 250 ms deadlines; normal work has a 1.5 s budget, followed by a separate 1.5 s cleanup reserve, inside the hook's outer 5 s timeout. Normal-error and ordinary termination paths attempt guarded cleanup. Scheduling, process startup and forced termination prevent a hard millisecond latency or crash-recovery guarantee; this step can delay typing.</li>
+  <li><strong>PRIMARY needs selection synchronization off.</strong> The helper requests only CLIPBOARD. Klipper or another manager can mirror that into PRIMARY when synchronization is enabled, so no unconditional PRIMARY-preservation claim is made.</li>
+  <li><strong>Klipper policy still governs retention.</strong> Capacity one cannot retain distinct A and T. Duplicates reuse entries; new copies can reorder or evict them, and bounded checks may fail to confirm retention. History may be disabled, ignored or cleared. Klipper may save dictations to disk under its own persistence policy: recovery is not a private in-memory archive.</li>
+  <li><strong>No supported atomic history-only API exists in Plasma 6.3.6.</strong> Its D-Bus slots provide getters, clear/save and <code>setClipboardContents</code>; that setter writes both CLIPBOARD and PRIMARY. Internal history insertion is not exported (§9). This kit instead uses the explicit temporary CLIPBOARD round trip, never SQLite edits or a second transcript archive.</li>
+</ul>
+<h3>5.5 Opt out, or diagnose without touching the clipboard</h3>
+<p>For pure direct typing, remove the <strong>entire</strong> <code>[output.post_process]</code> table from <span class="path">config/voxtype.toml</span>, review <code>make plan</code>, reapply with explicit replacement permission, and restart Voxtype only while idle. Leave the typing-only driver list, <code>mode = "type"</code> and <code>fallback_to_clipboard = false</code> intact. The installed helper can remain unused; output then needs no clipboard tools. <code>qdbus6</code> still serves the separate KDE shortcut check.</p>
+<p><code>make doctor</code> never runs the helper or reads clipboard/history. With the known hook selected it checks its command/settings, command availability and installed helper metadata (regular file, user-owned, mode <code>0600</code>, safe parent), not the helper's contents or actual operation. A custom hook receives qualified diagnostics, not a blanket safety promise. Manual acceptance is in §8.</p>
+<h3>5.6 Historical comparison: built-in paste-and-restore is not this helper</h3>
+<p>Voxtype 1.0.1's built-in <code>paste</code> mode is a separate implementation, not the default here. Source review found <code>wl-paste</code> without <code>--no-newline</code> (which can add a newline to restored text), a single-MIME snapshot, unguarded restoration over concurrent copies, and failure paths that can strand the dictation (§9). The kit's helper avoids those specific choices, but still accepts the underlying non-atomic trade-off.</p>
+<p>Earlier native experiments explored multi-representation restoration and ownership notifications. They are historical comparisons, not extra installed components or proof of lossless preservation: the shipped helper deliberately skips rich offers. Observed short replacement intervals do not establish an exact global exposure window or a guaranteed two-millisecond round trip.</p>
+<h2 id="micosd">6. Microphone, on-screen display, notifications</h2>
+<p><strong>The microphone follows the system default.</strong> With <code>device = "default"</code>, each recording opens the input currently selected through KDE / <a href="https://docs.pipewire.org/">PipeWire</a>'s ALSA route. Plug in a headset and make it default in KDE's Sound settings; the next take uses it without a daemon restart. PipeWire/WirePlumber owns fallback when a device disappears and may select a different available input. A change mid-recording can cause a gap — start a fresh take. <code>voxtype info devices</code> lists names if you deliberately want to pin one. Neither installer nor doctor opens a microphone.</p>
+<p><strong>The OSD is best-effort about placement.</strong> The preset shows a 400×48 px waveform strip, horizontally centred at 85% of the screen height, via the <a href="https://github.com/wmww/gtk4-layer-shell">GTK4 layer-shell</a> frontend. Layer-shell lets the compositor choose the output, so on multi-monitor setups the strip may appear on a different display than you expect — there is no pinned-monitor option in this release. <strong>Notifications via <a href="https://gitlab.gnome.org/GNOME/libnotify">libnotify</a> may be suppressed</strong> by focus/do-not-disturb modes or per-application notification settings even though Voxtype sends them; the waveform OSD and <code>voxtype status</code> are the dependable indicators.</p>
+<h2 id="install">7. Fresh installation</h2>
+<p>Prerequisites: KDE Plasma 6 on Wayland with PipeWire, packaged Voxtype 1.0.1, a configured typing driver (<code>eitype</code>, <code>dotool</code> or <code>ydotool</code>), GTK4 layer-shell for the OSD, and <code>wl-copy</code>/<code>wl-paste</code>/<code>qdbus6</code> for the default recovery hook. <code>qdbus6</code> also checks shortcut ownership. The kit uses Bash, Python 3.11+ and <a href="https://www.gnu.org/software/make/">Make</a>; <code>git</code>/<code>wget</code> fetch the checkout/release. Everything below is an <strong>explicit operator action</strong>: the installer never invokes package managers, sudo, downloads, group changes, service commands or binary switches.</p>
+<p><strong>Debian 13 amd64 is the tested baseline.</strong> The prebuilt DEB needs an x86-64-v3 (AVX2) CPU. Ubuntu/Kubuntu with compatible Plasma 6 packages is untested; check library/package availability and service names rather than assuming Debian's packaging. An existing working Voxtype installation needs no purge, backend switch, model re-download or group change merely to apply these three assets (§7.3).</p>
+<h3>7.1 Debian 13 (trixie) example: apt first, then the two manual downloads</h3>
+<p>Everything apt can provide comes first — this kit's helpers, the OSD library, audio tools and entry validation (desktop-file-utils is optional). ydotool 1.0.4 lives in the official trixie-backports repository, so enable it per the <a href="https://backports.debian.org/Instructions/">Debian Backports instructions</a> before the second command — the kit never adds repositories:</p>
+<pre><code>sudo apt install git make python3 wget \
+    libgtk4-layer-shell0 wl-clipboard libnotify-bin pipewire-alsa \
+    alsa-utils qdbus-qt6 libkf6service-bin desktop-file-utils
+sudo apt install -t trixie-backports ydotool</code></pre>
+<p>Only two pieces are <strong>manual downloads</strong>, because apt does not carry them: the upstream Voxtype release and the Whisper weights. Fetch the DEB into this checkout's ignored <span class="path">tmp/</span>, verify it against the pinned digest, then let apt install the local file — dependency resolution still comes from apt. The weights are a separate explicit <code>voxtype setup</code> step, deliberately without <code>--activate</code>:</p>
+<pre><code># Run from this checkout's root; downloads stay under ignored tmp/.
+mkdir -p tmp/packages
+wget -O tmp/packages/voxtype_1.0.1-1_amd64.deb \
+    https://github.com/peteonrails/voxtype/releases/download/v1.0.1/voxtype_1.0.1-1_amd64.deb
+sha256sum --check config/packages.sha256
+sudo apt install ./tmp/packages/voxtype_1.0.1-1_amd64.deb
+voxtype setup --download --model base.en</code></pre>
+<p>The pinned checksum is GitHub's <a href="https://api.github.com/repos/peteonrails/voxtype/releases/assets/538639602">published release-asset digest</a>, not an independent publisher signature; upstream's <code>SHA256SUMS.txt</code> does not cover the DEB, so it is not used as a false verification step.</p>
+<p><strong>About the typing drivers:</strong> the preset tries <code>eitype</code> (libei/portal; each invocation briefly registers with the remote-desktop portal), then <code>dotool</code> (uinput, keyboard-layout aware), then <a href="https://github.com/ReimuNotMoe/ydotool">ydotool</a> (uinput, needs its daemon, sends raw US keycodes — potentially wrong on non-US layouts). See the <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/docs/CONFIGURATION.md">upstream driver reference</a> for eitype/dotool. <code>wtype</code> is absent because KWin Wayland does not implement its virtual-keyboard protocol. Unavailable drivers are skipped; <code>make doctor</code> reports availability but never invokes one.</p>
+<p><strong>CPU or GPU is your call.</strong> CPU inference works with the package as installed. On supported hardware you may opt into a GPU backend with the upstream interactive <code>sudo voxtype setup gpu --enable</code>, which manages the <code>/usr/bin/voxtype</code> variant symlink; <code>voxtype info variants</code> shows the choices and <code>voxtype info accel</code> reports what is active. The kit never switches binaries and assumes no particular GPU vendor.</p>
+<div class="callout warn">
+  <p class="ttl">The input group is a privacy decision — never a silent one</p>
+  <p>Upstream suggests <code>sudo usermod -aG input "$USER"</code>. Know what that grants: write access to <code>/dev/uinput</code> — which Debian's ydotool user unit needs for injection, as does dotool — <strong>and read access to every keyboard event on the system</strong> under <code>/dev/input</code>, which Voxtype's modifier-release guard separately uses. The Super+Space shortcut itself does not need the group, because KDE owns the key. It remains <em>your</em> call, made with both eyes open; neither this kit nor any script in it will ever add you to a group. If you accept, join the group yourself, then <strong>log out and back in fully</strong> before enabling the services. If you decline, ydotool's packaged unit cannot be promised to work — consider <code>eitype</code>, or a deliberately configured uinput permission arrangement for dotool/ydotool. Dotool is not a permission-free escape hatch; follow the chosen driver's upstream requirements. Either way, never work around the decision with world-writable devices or sockets.</p>
+</div>
+<h3>7.2 Services: vendor units, explicit commands, idle check first</h3>
+<p>After applying the preset in §7.3, use the packaged service units; this kit ships none (<span class="path">/usr/lib/systemd/user/voxtype.service</span>, and the ydotool unit your distribution ships — its packaging varies by distro; the names below are Debian's):</p>
+<pre><code>systemctl --user enable --now ydotool.service voxtype.service
+voxtype status                            # confirm: idle, model loaded
+# After ANY config change (the daemon reads config at startup only),
+# restart only while idle, so you never kill a recording:
+voxtype status                            # must show idle
+systemctl --user restart voxtype.service</code></pre>
+<h3>7.3 Apply, replace or undo the three assets</h3>
+<p>Clone the kit if needed. Run <code>make check</code> on the <strong>stock checkout before editing model/configuration choices</strong>: its baseline tests intentionally assert the supplied defaults. No live clipboard, microphone, service or user configuration is touched by those tests.</p>
+<pre><code>git clone https://github.com/dnouri/voxtype-setup.git
+cd voxtype-setup
+make check
+# Optional: edit config/voxtype.toml for your model, language or other settings.
+make plan       # read-only whole-file diff; the installer defaults to dry-run</code></pre>
+<p><strong>Already running Voxtype?</strong> Keep the installed packages, model weights, backend and permissions. Match the preset's model/language to your existing choices if necessary: the installer preserves model files and binary selection, not the contents of your old configuration. Review all three planned files, then:</p>
+<pre><code>voxtype status                           # must be idle
+make install INSTALL_FLAGS='--replace --refresh-desktop'
+systemctl --user restart voxtype.service # explicit; reloads startup configuration</code></pre>
+<p>For a fresh install, use <code>make install INSTALL_FLAGS='--refresh-desktop'</code> after reviewing the plan, then start the packaged services (§7.2). <code>--replace</code> is necessary only for differing existing files. A no-op means identical files/modes, not a verified live setup.</p>
+<table>
+  <thead><tr><th>Managed asset, in write order</th><th>XDG destination (default shown)</th><th>New-file mode</th></tr></thead>
+  <tbody>
+    <tr><td>History helper</td><td class="path">$XDG_DATA_HOME/voxtype-setup/clipboard_history.py<br>~/.local/share/voxtype-setup/clipboard_history.py</td><td><code>0600</code>, interpreter-read</td></tr>
+    <tr><td>Whole Voxtype preset</td><td class="path">$XDG_CONFIG_HOME/voxtype/config.toml<br>~/.config/voxtype/config.toml</td><td><code>0600</code></td></tr>
+    <tr><td>Visible KDE application entry</td><td class="path">$XDG_DATA_HOME/applications/voxtype-record-toggle.desktop<br>~/.local/share/applications/voxtype-record-toggle.desktop</td><td><code>0644</code></td></tr>
+  </tbody>
+</table>
+<p>The installer rejects relative XDG paths and symlink paths. Safe existing read/write bits are retained for config/desktop files; the helper is always <code>0600</code>. <strong>These are whole-file replacements, not a merge.</strong> All preflight checks and required backups precede writes, and the helper is written before any new configuration that references it. The three-file operation is not a transaction: an interrupted/failed apply can leave a partial installation, which must be reviewed before retrying.</p>
+<p><code>make install</code> explicitly supplies <code>--apply</code>. Replacements require <code>--replace</code>; KDE cache refresh runs <code>kbuildsycoca6</code> only with <code>--refresh-desktop</code>. A shortcut collision prevents applying. Unknown ownership also prevents it unless, after manual review, you explicitly use <code>--skip-shortcut-check</code>; that flag never forces a binding. A free Meta+Space is acceptable for install, but must be assigned afterwards (§7.4).</p>
+<div class="callout warn">
+  <p class="ttl">Private backups have numbered names, not destination names</p>
+  <p>The printed <code>BACKUP:</code> directory is under <span class="path">${XDG_STATE_HOME:-$HOME/.local/state}/voxtype-setup/backups/</span>. Its <code>NN-basename</code> files contain <strong>only originals actually replaced</strong>, numbered in replacement order; indices are not fixed asset identifiers. Restore each to its destination from the reviewed plan, removing the numeric prefix rather than installing that prefix as a filename. Do not assume all three assets have a backup.</p>
+  <p>Before undoing a running setup, check it is idle. Restore any required helper before a configuration that calls it; refresh the cache after restoring a desktop entry, then explicitly restart Voxtype while idle. Review permissions as well as contents: backup files are private <code>0600</code> copies. There is no automatic rollback or uninstaller.</p>
+</div>
+<p>For removal, stop Voxtype and remove its KDE shortcut before deleting the three managed assets. Do not delete the config and restart into unfamiliar upstream defaults. If only disabling recovery, remove the hook table and reload instead (§5.5). Packages, backend selection and downloaded models remain separate. Never restart KWin to discover a shortcut.</p>
+<pre><code>make doctor     # passive installed-setup checks; never runs the history hook
+make test       # fake HOME/XDG/desktop commands only
+make check      # offline tests plus Python/Bash syntax checks</code></pre>
+<h3>7.4 Confirm the Super+Space shortcut, once, by hand</h3>
+<p>The entry installs as a visible application named <strong>Voxtype Record Toggle</strong> (category Utility; the file keeps its name <span class="path">voxtype-record-toggle.desktop</span> and runs <code>voxtype record toggle</code>). It only <em>declares</em> Meta+Space as the default for its launch action: refreshing the desktop cache with <code>kbuildsycoca6</code> (what <code>--refresh-desktop</code> runs, and only when asked) lets KDE discover the hint — it does not guarantee the key is assigned. Confirm it once:</p>
+<ol>
+  <li>Open <em>System Settings → Keyboard → Shortcuts</em> and search for <strong>Voxtype Record Toggle</strong>.</li>
+  <li>If it is missing, choose <em>Add New → Application…</em> and pick the installed entry. Because the entry declares a command shortcut, it can appear under <em>Commands</em> rather than with the ordinary applications. Select its action and assign <kbd>Meta</kbd>+<kbd>Space</kbd> — keep the Default, or choose Custom and press Super+Space — then <em>Apply</em>. The doctor checks this exact combination; another one will be reported as unassigned.</li>
+  <li>Do <strong>not</strong> use <em>Add New → Command</em> or <em>Script</em>: that registers a different desktop ID, and the doctor will report the collision. Never restart KWin to pick the entry up.</li>
+</ol>
+<p>From then on <code>make doctor</code> treats an unassigned Meta+Space as an error, just like one owned by another component; the installer is satisfied with a free key and only stops on a real collision or undeterminable ownership. Neither tool can certify the actual microphone, typing focus, keyboard layout, or device/socket permissions — the manual test in §8 is the real check.</p>
+<h2 id="verify">8. Verify it yourself</h2>
+<p>Automated checks inspect files and prerequisites, not actual dictation. Doctor reads TOML on disk and the installed desktop entry, checks the selected known hook and helper metadata, and warns about <code>VOXTYPE_*</code> overrides without showing values. It never imports/executes the installed helper, reads clipboard/history, records or types. It cannot certify the configuration already loaded by a running daemon, microphone selection, focus, layout, device/socket permissions or successful recovery. CI uses temporary HOME/XDG and fake commands, not a real session. No automated result substitutes for this deliberately manual acceptance test:</p>
+<ol>
+  <li>Use synthetic, disposable content. With enough Klipper capacity, copy ordinary plain text A; avoid a rich application offer for this first test. If checking PRIMARY separately, disable Klipper's selection synchronization first. Focus a disposable editor, press <kbd>Super</kbd>+<kbd>Space</kbd>, speak a sentence and press again. Expect the complete result T at the cursor, with no extra submission key; recognised line breaks can still generate Enter events.</li>
+  <li>Paste: the normal successful outcome is exactly A, including any trailing newlines. That verifies the <em>final</em> supported text, not an untouched clipboard: the hook temporarily published T. Open <kbd>Super</kbd>+<kbd>V</kbd> and check that the complete T remains in history, normally behind A. Rich/absent offers, disabled history, insufficient capacity or failures can skip recovery; direct typing should still work. A detected newer copy should be preferred, but no manual check abolishes the race in §5.</li>
+  <li>When relying on long takes, deliberately verify a recording beyond 60 seconds yourself. Stop explicitly and check that the waveform disappears or <code>voxtype status</code> returns idle. Nothing in this kit records automatically.</li>
+</ol>
+<p><strong>Optional: your own voice, your own vocabulary.</strong> <code>scripts/record-sample.sh</code> requires an interactive terminal and explicit Enter before recording a local sample; installer, doctor and tests never record. Audio stays in ignored <span class="path">tmp/samples/</span> and is never committed. The upstream <code>transcribe</code> command prints file-only results to the terminal, bypassing live typing and the history hook; it changes no configuration:</p>
+<pre><code>voxtype --config config/voxtype.toml transcribe "tmp/samples/&lt;dir&gt;/sample.wav"
+voxtype --initial-prompt "Project names: Voxtype, Klipper, Plasma." \
+    --config config/voxtype.toml transcribe "tmp/samples/&lt;dir&gt;/sample.wav"</code></pre>
+<p>An <code>initial_prompt</code> is a short spelling/casing hint for Whisper — a nudge, not a guarantee. Keep it to a few terms you dictate daily (project names, tool names) and that you have approved; long or unverified word lists bias output for the worse.</p>
+<h2 id="sources">9. Sources</h2>
+<ul class="tight" style="font-size:.88rem">
+  <li>Voxtype v1.0.1 release and assets: <a href="https://github.com/peteonrails/voxtype/releases/tag/v1.0.1">github.com/peteonrails/voxtype/releases/tag/v1.0.1</a> (the DEB's GitHub asset digest is pinned in <code>config/packages.sha256</code>).</li>
+  <li>Upstream install docs (Debian route, post-install, GPU): <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/docs/INSTALL.md">docs/INSTALL.md</a>; configuration reference — output modes, <code>driver_order</code>, wtype-on-KDE, <code>[output.post_process]</code>: <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/docs/CONFIGURATION.md">docs/CONFIGURATION.md</a> (both at tag v1.0.1).</li>
+  <li>Duration semantics (u32 type, wall-clock stop, no unlimited sentinel): <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/src/config/audio.rs">src/config/audio.rs</a>, <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/src/daemon.rs">src/daemon.rs</a>, setter range in <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/src/config/schema.rs">src/config/schema.rs</a> (all v1.0.1).</li>
+  <li>Voxtype output selection and quote normalization: <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/src/output/mod.rs">src/output/mod.rs</a>; post-processing, LF trimming and original-text fallback: <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/src/output/post_process.rs">src/output/post_process.rs</a> (v1.0.1). Historical built-in paste-and-restore comparison: <a href="https://github.com/peteonrails/voxtype/blob/v1.0.1/src/output/paste.rs">src/output/paste.rs</a> — newline-adding snapshot, single-MIME <code>ClipboardContent</code> and keystroke-failure restore path. None of that built-in paste code implements this kit's hook.</li>
+  <li>This kit's implementation contract: <a href="../scripts/clipboard_history.py">clipboard_history.py</a>, <a href="../config/voxtype.toml">preset</a>, <a href="../scripts/install.py">installer</a>, <a href="../scripts/doctor.py">doctor</a>; offline cases in <a href="../tests/test_clipboard_history.py">helper tests</a> and <a href="../tests/test_setup.py">setup tests</a>. These describe the implementation, not proof that a particular desktop is ready.</li>
+  <li>The newline-append behaviour: <a href="https://github.com/bugaevc/wl-clipboard/blob/v2.2.1/src/wl-paste.c">wl-clipboard v2.2.1, src/wl-paste.c</a> (textual reads gain a trailing newline unless <code>--no-newline</code>).</li>
+  <li>Klipper's exported D-Bus slots (getters/clear/save/<code>setClipboardContents</code> only): <a href="https://github.com/KDE/plasma-workspace/blob/v6.3.6/klipper/klipper.h">klipper.h</a> and <a href="https://github.com/KDE/plasma-workspace/blob/v6.3.6/klipper/klipper.cpp">klipper.cpp</a> (<code>setClipboardContents</code> writes both PRIMARY and CLIPBOARD); history insertion is internal: <a href="https://github.com/KDE/plasma-workspace/blob/v6.3.6/klipper/historymodel.h">historymodel.h</a>, <a href="https://github.com/KDE/plasma-workspace/blob/v6.3.6/klipper/historymodel.cpp">historymodel.cpp</a> (all plasma-workspace v6.3.6).</li>
+  <li>Whisper model weights: <a href="https://huggingface.co/ggerganov/whisper.cpp">whisper.cpp ggml model cards</a>; enabling backports: <a href="https://backports.debian.org/Instructions/">Debian Backports instructions</a>.</li>
+</ul>
+<div class="foot">
+  Voxtype setup kit &middot; guide revision 6 &middot; written against packaged Voxtype 1.0.1 and plasma-workspace v6.3.6 sources on KDE Plasma 6 (Wayland). This kit is MIT-licensed and is not affiliated with upstream Voxtype, which is its own project under its own license. Automated tests use fake desktop commands and never a real clipboard, microphone, or session.
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+/tmp/
+/.venv/
+__pycache__/
+*.py[cod]
+# Voice samples, model weights and transcripts must stay local.
+*.wav
+*.flac
+*.ogg
+*.pcm
+*.raw
+*.bin
+*.onnx
+*.onnx.data

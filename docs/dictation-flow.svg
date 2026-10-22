@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 840" width="960" height="840" role="img" aria-labelledby="title description">
+  <title id="title">Dictation flow with direct typing, ordinary Paste, and Super+V recovery</title>
+  <desc id="description">Press Super+Space to record the default microphone and press again to transcribe the whole recording with local Whisper. The new text arrives by direct typing at the cursor, with no paste key, select-all, or extra Enter. Ordinary Paste normally returns the previous supported plain-text clipboard. Super+V opens Klipper history, where you select a saved complete dictation and then paste it. Recovery is enabled by default, best-effort, and non-atomic. The helper briefly publishes the dictation with wl-copy, checks that Klipper captured it, and restores the previous text. Detected newer copies are left alone, but restoration can fail. The helper skips recovery for rich, absent, unreadable, or oversized clipboard contents. Klipper capacity and policy can prevent recovery, and history may persist to disk. Typing continues when recovery is skipped or fails. PRIMARY stays unchanged only with selection synchronization disabled.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowhead"/>
+    </marker>
+  </defs>
+  <style>
+    .background { fill:#f7f9fc; }
+    .box { fill:#fff; stroke:#bbc8d8; stroke-width:1.5; }
+    .note { fill:#edf2f8; stroke:#c6d1df; stroke-width:1.2; }
+    .hook { fill:#eaf3ff; stroke:#568bc9; stroke-width:1.6; }
+    .safe { fill:#eaf6ef; stroke:#57a477; stroke-width:1.5; }
+    .warn { fill:#fff4df; stroke:#c7a14a; stroke-width:1.2; }
+    text { font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; fill:#37475a; font-size:16px; }
+    .heading { font-size:23px; font-weight:700; fill:#162638; }
+    .title { font-size:18px; font-weight:700; fill:#162638; }
+    .mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; fill:#175ba5; }
+    .edge { stroke:#758aa3; stroke-width:1.8; fill:none; }
+    .arrowhead { fill:#758aa3; }
+    @media (prefers-color-scheme: dark) {
+      .background { fill:#101820; }
+      .box { fill:#1b2734; stroke:#53667d; }
+      .note { fill:#192432; stroke:#465b73; }
+      .hook { fill:#132a45; stroke:#6396d0; }
+      .safe { fill:#152e21; stroke:#63ac83; }
+      .warn { fill:#332911; stroke:#ba9344; }
+      text { fill:#c2cfdd; }
+      .heading,.title { fill:#edf3fa; }
+      .mono { fill:#8fc2ff; }
+      .edge { stroke:#93a6bf; }
+      .arrowhead { fill:#93a6bf; }
+    }
+  </style>
+
+  <rect class="background" width="960" height="840" rx="12"/>
+  <text class="heading" x="30" y="32">Press, talk, press again. Text arrives at the cursor.</text>
+
+  <rect class="box" x="30" y="54" width="410" height="84" rx="9"/>
+  <text class="title" x="50" y="82">1 · KDE: Super+Space</text>
+  <text class="mono" x="50" y="111">voxtype record toggle</text>
+  <rect class="note" x="500" y="54" width="430" height="84" rx="9"/>
+  <text x="520" y="84">A visible KDE desktop entry owns the key.</text>
+  <text x="520" y="112">No second hotkey listener or new service.</text>
+
+  <path class="edge" d="M235 138 V162" marker-end="url(#arrow)"/>
+  <rect class="box" x="30" y="166" width="410" height="100" rx="9"/>
+  <text class="title" x="50" y="194">2 · Record the default microphone</text>
+  <text x="50" y="222">PipeWire / ALSA · GTK4 waveform</text>
+  <text x="50" y="246">Nothing is typed while recording.</text>
+  <rect class="warn" x="500" y="166" width="430" height="100" rx="9"/>
+  <text class="title" x="520" y="194">Stop it yourself</text>
+  <text x="520" y="222">No silence cutoff; finite timer ≈136 years.</text>
+  <text x="520" y="246">Audio RAM grows ≈230 MB/hour.</text>
+
+  <path class="edge" d="M235 266 V290" marker-end="url(#arrow)"/>
+  <rect class="box" x="30" y="294" width="410" height="100" rx="9"/>
+  <text class="title" x="50" y="322">3 · Second press → local Whisper</text>
+  <text x="50" y="350">Transcribe the whole utterance once.</text>
+  <text x="50" y="374">No live fragments or application profiles.</text>
+  <rect class="warn" x="500" y="294" width="430" height="100" rx="9"/>
+  <text class="title" x="520" y="322">Recovery has limits</text>
+  <text x="520" y="350">Skip rich, absent, unreadable or huge clips.</text>
+  <text x="520" y="374">Klipper capacity and persistence still apply.</text>
+
+  <path class="edge" d="M235 394 V426" marker-end="url(#arrow)"/>
+  <rect class="box" x="30" y="430" width="410" height="110" rx="9"/>
+  <text class="title" x="50" y="458">4 · Text appears at the cursor</text>
+  <text x="50" y="486">eitype / dotool / ydotool · typing only</text>
+  <text x="50" y="512">No paste key, select-all or extra Enter.</text>
+
+  <path class="edge" d="M440 485 H496" marker-end="url(#arrow)"/>
+  <rect class="safe" x="500" y="430" width="430" height="110" rx="9"/>
+  <text class="title" x="520" y="455">Typing continues if history fails</text>
+  <text x="520" y="480">Detected newer copies are left alone.</text>
+  <text x="520" y="504">PRIMARY unchanged only with sync off.</text>
+  <text x="520" y="528">Klipper may save history to disk.</text>
+
+  <path class="edge" d="M235 540 V566" marker-end="url(#arrow)"/>
+  <rect class="hook" x="30" y="570" width="900" height="210" rx="10"/>
+  <text class="title" x="50" y="597">Afterward, choose what to paste</text>
+
+  <rect class="box" x="50" y="614" width="420" height="112" rx="8"/>
+  <text class="title" x="67" y="641">Ordinary Paste</text>
+  <text x="67" y="670">Normally pastes what you last copied,</text>
+  <text x="67" y="698">rather than this dictation.</text>
+
+  <rect class="box" x="490" y="614" width="420" height="112" rx="8"/>
+  <text class="title" x="507" y="641">Recover the dictation</text>
+  <text x="507" y="670">Press Super+V and select the dictation.</text>
+  <text x="507" y="698">Then paste it where you need it.</text>
+
+  <text x="50" y="757">A helper briefly copies the dictation with wl-copy, then restores your earlier text.</text>
+
+  <text x="30" y="822">History recovery is best-effort, not atomic. Clipboard restoration can fail.</text>
+</svg>
